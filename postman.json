@@ -1,0 +1,396 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Examen 2 - Products API",
+		"description": "Colección de Postman para probar el prototipo de API REST de productos (CRUD).\n\nEndpoints incluidos:\n- GET /products\n- GET /products/:id\n- POST /products\n- PATCH /products/:id\n- DELETE /products/:id\n\nVariable de entorno usada: `baseUrl` (por defecto http://localhost:3000)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET /products - Obtener todos los productos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code es 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('La respuesta es un array', function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.be.an('array');",
+							"});",
+							"",
+							"pm.test('Cada producto tiene los campos requeridos', function () {",
+							"    const json = pm.response.json();",
+							"    if (json.length > 0) {",
+							"        pm.expect(json[0]).to.have.all.keys('id','name','price','stock','is_active','created_at','updated_at');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/products",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products"
+					]
+				},
+				"description": "Devuelve la lista completa de productos almacenados en memoria."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /products/:id - Obtener producto por id (existente)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code es 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('El id devuelto coincide con el solicitado', function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json.id).to.eql('11111111-1111-1111-1111-111111111111');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/products/11111111-1111-1111-1111-111111111111",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products",
+						"11111111-1111-1111-1111-111111111111"
+					]
+				},
+				"description": "Devuelve el producto con id `11111111-1111-1111-1111-111111111111` (existe en el mock inicial)."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /products/:id - Producto NO existente (404)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code es 404', function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"pm.test('El body contiene mensaje de error', function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property('error');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/products/00000000-0000-0000-0000-000000000000",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products",
+						"00000000-0000-0000-0000-000000000000"
+					]
+				},
+				"description": "Verifica que la API responde con 404 cuando se solicita un id inexistente."
+			},
+			"response": []
+		},
+		{
+			"name": "POST /products - Crear producto (válido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code es 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Devuelve el producto creado con id generado', function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property('id');",
+							"    pm.expect(json.name).to.eql('Producto de prueba');",
+							"    pm.expect(json.price).to.eql(19.99);",
+							"    pm.expect(json.stock).to.eql(10);",
+							"    pm.expect(json.is_active).to.eql(true);",
+							"    // Guardamos el id en una variable de colección para usarlo en PATCH/DELETE",
+							"    pm.collectionVariables.set('lastCreatedId', json.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Producto de prueba\",\n  \"price\": 19.99,\n  \"stock\": 10,\n  \"is_active\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/products",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products"
+					]
+				},
+				"description": "Crea un nuevo producto con datos válidos. La API genera id, created_at y updated_at."
+			},
+			"response": []
+		},
+		{
+			"name": "POST /products - Datos inválidos (400)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code es 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test('Devuelve mensaje de error', function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property('error');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Sin precio\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/products",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products"
+					]
+				},
+				"description": "Verifica que el endpoint rechaza payloads inválidos con código 400."
+			},
+			"response": []
+		},
+		{
+			"name": "PATCH /products/:id - Actualizar producto creado",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code es 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('El precio se ha actualizado', function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json.price).to.eql(29.99);",
+							"});",
+							"",
+							"pm.test('updated_at es distinto a created_at', function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json.updated_at).to.not.eql(json.created_at);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"price\": 29.99,\n  \"stock\": 5\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/products/{{lastCreatedId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products",
+						"{{lastCreatedId}}"
+					]
+				},
+				"description": "Actualiza parcialmente el producto creado en el paso anterior (usa la variable `lastCreatedId`)."
+			},
+			"response": []
+		},
+		{
+			"name": "PATCH /products/:id - Producto NO existente (404)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code es 404', function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"price\": 1.0\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/products/00000000-0000-0000-0000-000000000000",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products",
+						"00000000-0000-0000-0000-000000000000"
+					]
+				},
+				"description": "Verifica que actualizar un producto inexistente devuelve 404."
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE /products/:id - Eliminar producto creado",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code es 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Devuelve el producto eliminado', function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property('id');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/products/{{lastCreatedId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products",
+						"{{lastCreatedId}}"
+					]
+				},
+				"description": "Elimina el producto creado anteriormente."
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE /products/:id - Producto NO existente (404)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code es 404', function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/products/00000000-0000-0000-0000-000000000000",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products",
+						"00000000-0000-0000-0000-000000000000"
+					]
+				},
+				"description": "Verifica que eliminar un producto inexistente devuelve 404."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "lastCreatedId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
